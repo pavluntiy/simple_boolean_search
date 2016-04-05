@@ -38,7 +38,7 @@ class Searcher:
 
             line = dict_file.readline()
         dict_file.close()
-        print "loaded dict:", len(self.word_index)
+        # print "loaded dict:", len(self.word_index)
 
     def load_index(self):
         index_file = open("index.txt", "r")
@@ -51,7 +51,7 @@ class Searcher:
             self.index[word] = doc_ids
             line = index_file.readline()
         index_file.close()
-        print "loaded index:", len(self.index)
+        # print "loaded index:", len(self.index)
         # print self.index.keys()
 
     def load_urls(self):
@@ -65,7 +65,7 @@ class Searcher:
             line = url_file.readline()
 
         url_file.close()
-        print "loaded urls:", len(self.urls)
+        # print "loaded urls:", len(self.urls)
 
 
     def __init__(self):
@@ -75,7 +75,7 @@ class Searcher:
         self.load_dict()
         self.load_urls()
         self.load_index()
-        print "Ready to search"
+        # print "Ready to search"
         
     def get_doc_id_set(self, word):
         if word not in self.word_index:

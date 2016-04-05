@@ -144,7 +144,7 @@ def build_dict(docs):
 
     
 def main():
-    build_dict(read_docs(sys.argv[1:]))
+    build_dict(read_docs(sys.argv[2:]))
 
 
 if __name__ == '__main__':
