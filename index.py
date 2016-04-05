@@ -68,18 +68,34 @@ def get_word_list(text):
     # words = Counter()
     words = re.findall(word_re, text)
     words = map(lambda w: w.lower(), words)
-    return Counter(words).keys()
+    return Counter(words)
 
 def build_dict(docs):
     urls = {}
-    words = defaultdict(lambda: [])
+    words_in_docs = []
+    total_words = Counter()
     for url, text in docs:     
         urls[len(urls)] = url
-        words = get_word_list(text) 
+        cur_words = get_word_list(text)
+        words_in_docs.append(cur_words.keys()) 
+        total_words.update(cur_words)
         
+    
+    word_to_idx = {}
+    idx_to_word = {}
+
+    for idx, word in enumerate(total_words.keys()):
+        idx_to_word[idx] = word
+        word_to_idx[word] = idx
+
+    pairs = []
+    for doc_id, words in enumerate(words_in_docs):
         for word in words:
-            print word
-        break
+            pairs.append((word_to_idx[word], doc_id))
+
+
+    # print len(pairs)
+
 
 
 def main():
