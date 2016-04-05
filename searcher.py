@@ -28,7 +28,7 @@ class Query:
 class Searcher:
 
     def load_dict(self):
-        dict_file = open("dict.txt", "r")
+        dict_file = open("./data/dict.txt", "r")
         line = dict_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
@@ -41,21 +41,25 @@ class Searcher:
         # print "loaded dict:", len(self.word_index)
 
     def load_index(self):
-        index_file = open("index.txt", "r")
+
+        index_file = open("./data/index.txt", "r")
+        word = index_file.tell()
         line = index_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
-            word = int(splitted[0])
+            # word = int(splitted[0)
+            # print word
             doc_ids = map(int, splitted[1:])
 
             self.index[word] = doc_ids
+            word = index_file.tell()
             line = index_file.readline()
         index_file.close()
         # print "loaded index:", len(self.index)
         # print self.index.keys()
 
     def load_urls(self):
-        url_file = open("urls.txt", "r")
+        url_file = open("./data/urls.txt", "r")
         line = url_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
@@ -95,6 +99,8 @@ class Searcher:
 
     def get_document_list(self, query):
         docs = self.search(query)
+        docs = sorted(docs)
+        # print docs
 
         return [self.urls[it] for it in docs]
 

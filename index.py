@@ -100,7 +100,7 @@ def get_pairs(words_in_docs, total_words):
 
 
 def build_index(pairs):
-    index_file = open("index.txt", "w")
+    index_file = open("./data/index.txt", "w")
     pairs = sorted(pairs)
 
     # prev = None
@@ -115,36 +115,47 @@ def build_index(pairs):
         # prev = word
 
     # index_file.write(str(index.iteritems()))
+    new_word_ids = {}
 
     for word, doc_ids in word_index.iteritems():
-        index_file.write("{0} ".format(word))
+        # index_file.write("{0} ".format(word))
+        new_word_ids[word] = index_file.tell()
+        # print new_word_ids[word]
         for doc_id in sorted(doc_ids):
             index_file.write("{0} ".format(doc_id))
         index_file.write("\n")
     index_file.close()
+
+    return new_word_ids
 
 
 
 def build_dict(docs):
     idx_to_urls, words_in_docs, total_words = get_words(docs)
     word_to_idx, idx_to_word, pairs = get_pairs(words_in_docs, total_words)
-    build_index(pairs)
+    new_word_ids = build_index(pairs)
+
+    for word in word_to_idx:
+        word_to_idx[word] = new_word_ids[word_to_idx[word]]
 
 
-    dict_file = open("dict.txt", "w")
+    dict_file = open("./data/dict.txt", "w")
     for word, idx in word_to_idx.iteritems():
             dict_file.write(u"{0} {1}\n".format(word, idx).encode("utf-8"))
     dict_file.close()
 
 
-    urls_file = open("urls.txt", "w")
+    urls_file = open("./data/urls.txt", "w")
     for idx, url in idx_to_urls.iteritems():
             urls_file.write(u"{0} {1}\n".format(idx, url).encode("utf-8"))
     urls_file.close()
 
     
 def main():
+    os.system("mkdir tmp")
+    os.system("mkdir data")
     build_dict(read_docs(sys.argv[2:]))
+    os.system("rm -rf tmp")
 
 
 if __name__ == '__main__':
