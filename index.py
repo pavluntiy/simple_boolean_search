@@ -131,7 +131,18 @@ def build_dict(docs):
     build_index(pairs)
 
 
+    dict_file = open("dict.txt", "w")
+    for word, idx in word_to_idx.iteritems():
+            dict_file.write(u"{0} {1}\n".format(word, idx).encode("utf-8"))
+    dict_file.close()
 
+
+    urls_file = open("urls.txt", "w")
+    for idx, url in idx_to_urls.iteritems():
+            urls_file.write(u"{0} {1}\n".format(idx, url).encode("utf-8"))
+    urls_file.close()
+
+    
 def main():
     build_dict(read_docs(sys.argv[1:]))
 
