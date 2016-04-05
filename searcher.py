@@ -21,8 +21,7 @@ class Query:
             self.left = Query(text_l)
             self.right = Query(text_r)
         else:
-            self.term = text.strip()
-            print self.term
+            self.term = text.decode("utf-8").strip().lower()
 
 
 
@@ -33,9 +32,9 @@ class Searcher:
         line = dict_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
-            word = splitted[0]
+            word = splitted[0].decode("utf-8")
             word_id = int(splitted[1])
-            self.word_index[word] = word_id
+            self.word_index[word] = int(word_id)
 
             line = dict_file.readline()
         dict_file.close()
@@ -46,20 +45,21 @@ class Searcher:
         line = index_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
-            word = splitted[0]
+            word = int(splitted[0])
             doc_ids = map(int, splitted[1:])
 
             self.index[word] = doc_ids
             line = index_file.readline()
         index_file.close()
         print "loaded index:", len(self.index)
+        # print self.index.keys()
 
     def load_urls(self):
         url_file = open("urls.txt", "r")
         line = url_file.readline()
         while line != '':
             splitted = line.strip().split(' ')
-            idx = splitted[0]
+            idx = int(splitted[0])
             url = splitted[1]
             self.urls[idx] = url
             line = url_file.readline()
@@ -77,25 +77,44 @@ class Searcher:
         self.load_index()
         print "Ready to search"
         
-        
+    def get_doc_id_set(self, word):
+        if word not in self.word_index:
+            return set()
+
+        windex = self.word_index[word]
+        # print windex
+        # print windex in self.index
+        return set(self.index[windex])
+
 
     def search(self, query):
-        # if query is None:
+        if query.term is not None:
+            return self.get_doc_id_set(query.term)
+
         return self.search(query.left) & self.search(query.right)
 
     def get_document_list(self, query):
-        pass
+        docs = self.search(query)
+
+        return [self.urls[it] for it in docs]
 
 
 
 def main():
     searcher = Searcher()
 
-    query = sys.stdin.readline()
-    while query != '':        
+    query_text = sys.stdin.readline()
+    while query_text != '':        
         # print query
-        query = Query(query)
-        query = sys.stdin.readline()
+        query = Query(query_text)
+        res = searcher.get_document_list(query)
+
+        print query_text.strip()
+        print len(res)
+        for url in res:
+            print url
+        query_text = sys.stdin.readline()
+
 
 if __name__ == '__main__':
     main()
