@@ -5,6 +5,8 @@ import sys
 import os
 from collections import Counter, defaultdict
 import re
+from varbyteencoder import VarByteEncoder
+
 
 class Query:
     def __init__(self, text):
@@ -30,33 +32,54 @@ class Searcher:
     def load_dict(self):
         dict_file = open("./data/dict.txt", "r")
         line = dict_file.readline()
+        self.doc_id_count = {}
         while line != '':
             splitted = line.strip().split(' ')
             word = splitted[0].decode("utf-8")
             word_id = int(splitted[1])
             self.word_index[word] = int(word_id)
 
+            # print word_id
+
+            self.doc_id_count[word_id] = int(splitted[2])
+
             line = dict_file.readline()
         dict_file.close()
+
         # print "loaded dict:", len(self.word_index)
 
     def load_index(self):
 
+        varbyte = VarByteEncoder()
+
         index_file = open("./data/index.txt", "r")
         word = index_file.tell()
-        line = index_file.readline()
-        while line != '':
-            splitted = line.strip().split(' ')
+        byte_cnt = self.doc_id_count[word]
+        # line = index_file.readline()
+        blob  = index_file.read(byte_cnt)
+        # print byte_cnt
+        print word
+
+        while blob != '':
+            # print map(lambda x: bin(ord(x)), blob)
+            # splitted = line.strip().split(' ')
             # word = int(splitted[0)
             # print word
-            doc_ids = map(int, splitted[1:])
+            # doc_ids = map(int, splitted[1:])
+            doc_ids = varbyte.decode(blob)
+
 
             self.index[word] = doc_ids
             word = index_file.tell()
-            line = index_file.readline()
+            byte_cnt = self.doc_id_count[word]
+            print word
+            blob  = index_file.read(byte_cnt)
+            # print byte_cnt
+            # line = index_file.readline()
         index_file.close()
         # print "loaded index:", len(self.index)
         # print self.index.keys()
+        # print self.index
 
     def load_urls(self):
         url_file = open("./data/urls.txt", "r")

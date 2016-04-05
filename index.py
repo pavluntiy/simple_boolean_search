@@ -6,55 +6,7 @@ import os
 from collections import Counter, defaultdict
 import re
 
-class VarByteEncoder:
-        
-    def encode(self, xs):
-        res = ""
-        for x in xs:
-            res += self.encode_one(x)
-        return res
-
-    def encode_one(self, x):
-        rem = 0
-        res = ""
-
-        i = 0
-        while x >= 0:
-            rem = x % 128
-            if i == 0:
-                rem += 128
-            res = struct.pack('B', rem) + res
-            x /= 128
-            i += 1
-            if x == 0:
-                break
-        return res
-            
-    def decode(self, blob):
-
-        res = []
-        i = len(blob) - 1
-        while i >= 0:
-            x = 0
-            cur = struct.unpack('B', blob[i])[0]
-            print bin(ord(blob[i]))
-            x += cur - 128
-            i -= 1
-            cur = struct.unpack('B', blob[i])[0]
-            if cur < 128:
-                d = 128
-                print x
-                while cur < 128:
-                    x += cur * d
-                    i -= 1
-                    cur = struct.unpack('B', blob[i])[0]
-                    
-                    d *= 128
-                    print x
-
-            res.append(x)
-
-        return list(reversed(res))
+from varbyteencoder import VarByteEncoder
 
 
 
@@ -99,7 +51,7 @@ def get_pairs(words_in_docs, total_words):
     return word_to_idx, idx_to_word, pairs
 
 
-def build_index(pairs):
+def build_index(pairs, word_to_idx):
     index_file = open("./data/index.txt", "w")
     pairs = sorted(pairs)
 
@@ -117,32 +69,41 @@ def build_index(pairs):
     # index_file.write(str(index.iteritems()))
     new_word_ids = {}
 
+    lens = {}
+    varbyte = VarByteEncoder()
     for word, doc_ids in word_index.iteritems():
         # index_file.write("{0} ".format(word))
+
         new_word_ids[word] = index_file.tell()
+        index_file.write(varbyte.encode(sorted(doc_ids)))
+        lens[word] = index_file.tell() - new_word_ids[word]
         # print new_word_ids[word]
-        for doc_id in sorted(doc_ids):
-            index_file.write("{0} ".format(doc_id))
-        index_file.write("\n")
+        # for doc_id in sorted(doc_ids):
+        #     index_file.write("{0} ".format(doc_id))
+        # index_file.write("\n")
     index_file.close()
 
-    return new_word_ids
+    # print lens
+
+    dict_file = open("./data/dict.txt", "w")
+    for word, idx in word_to_idx.iteritems():
+            print lens[word_to_idx[word]]
+            dict_file.write(u"{0} {1} {2}\n".format(word, idx, lens[word_to_idx[word]]).encode("utf-8"))
+    dict_file.close()
+
+    return new_word_ids, word_index
 
 
 
 def build_dict(docs):
     idx_to_urls, words_in_docs, total_words = get_words(docs)
     word_to_idx, idx_to_word, pairs = get_pairs(words_in_docs, total_words)
-    new_word_ids = build_index(pairs)
+    new_word_ids, word_index = build_index(pairs, word_to_idx)
 
     for word in word_to_idx:
         word_to_idx[word] = new_word_ids[word_to_idx[word]]
 
 
-    dict_file = open("./data/dict.txt", "w")
-    for word, idx in word_to_idx.iteritems():
-            dict_file.write(u"{0} {1}\n".format(word, idx).encode("utf-8"))
-    dict_file.close()
 
 
     urls_file = open("./data/urls.txt", "w")
