@@ -70,7 +70,8 @@ def get_word_list(text):
     words = map(lambda w: w.lower(), words)
     return Counter(words)
 
-def build_dict(docs):
+
+def get_words(docs):
     urls = {}
     words_in_docs = []
     total_words = Counter()
@@ -79,8 +80,10 @@ def build_dict(docs):
         cur_words = get_word_list(text)
         words_in_docs.append(cur_words.keys()) 
         total_words.update(cur_words)
-        
-    
+
+    return urls, words_in_docs, total_words
+
+def get_pairs(words_in_docs, total_words):
     word_to_idx = {}
     idx_to_word = {}
 
@@ -93,8 +96,39 @@ def build_dict(docs):
         for word in words:
             pairs.append((word_to_idx[word], doc_id))
 
+    return word_to_idx, idx_to_word, pairs
 
-    # print len(pairs)
+
+def build_index(pairs):
+    index_file = open("index.txt", "w")
+    pairs = sorted(pairs)
+
+    # prev = None
+    word_index = defaultdict(lambda: [])
+    for pair in pairs:
+        word = pair[0]
+        doc_id = pair[1]
+        # if word != prev and prev is not None:
+            # index_file.write(str(index.iteritems()))
+            # word_index = defaultdict(lambda: [])
+        word_index[word].append(doc_id)
+        # prev = word
+
+    # index_file.write(str(index.iteritems()))
+
+    for word, doc_ids in word_index.iteritems():
+        index_file.write("{0} ".format(word))
+        for doc_id in sorted(doc_ids):
+            index_file.write("{0} ".format(doc_id))
+        index_file.write("\n")
+    index_file.close()
+
+
+
+def build_dict(docs):
+    idx_to_urls, words_in_docs, total_words = get_words(docs)
+    word_to_idx, idx_to_word, pairs = get_pairs(words_in_docs, total_words)
+    build_index(pairs)
 
 
 
