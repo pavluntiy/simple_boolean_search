@@ -60,19 +60,19 @@ class Simple9Encoder:
 
         return False
 
-    def get_signature(self, n):
-        return bin(self.values.index(n))[2:].zfill(4)
+    # def get_signature(self, n):
+    #     return bin(self.values.index(n))[2:].zfill(4)
 
-    def get_n(self, signature):
-        return self.values[int(signature, 2)]
+    # def get_n(self, signature):
+    #     return self.values[int(signature, 2)]
 
-    def get_fill_len(self, n):
-        return 28/n
+    # def get_fill_len(self, n):
+    #     return 28/n
 
     def encode_batch(self, xs):
         # print len(xs)
-        resstr = self.get_signature(len(xs))
-        fill_len = self.get_fill_len(len(xs))
+        resstr = bin(self.values.index(len(xs)))[2:].zfill(4)
+        fill_len = 28/(len(xs))
 
         for x in xs:
             resstr += bin(x)[2:].zfill(fill_len)
@@ -129,7 +129,7 @@ class Simple9Encoder:
 
     def decode_batch(self, res_str):
         res_list = []
-        n = self.get_n(res_str[:4])
+        n = self.values[int(res_str[:4], 2)]
         res_str = res_str[4:]
 
         num_len = 28/n
