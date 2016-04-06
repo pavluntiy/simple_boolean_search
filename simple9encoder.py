@@ -51,7 +51,8 @@ class Simple9Encoder:
 
         max_log = 0
         for x in xs:
-            max_log = max(max_log, math.ceil(math.log(x, 2)))
+            cur_log = math.ceil(math.log(x, 2)) if x != 0 else 1
+            max_log = max(max_log, cur_log)
 
         # print max_log
         if n * max_log <= 28:
@@ -102,7 +103,7 @@ class Simple9Encoder:
                     break
 
             resstr = self.encode_batch(xs[:n])
-            print resstr
+            # print resstr
             self.write_str(resstr)
 
             xs = xs[n:]
@@ -110,17 +111,65 @@ class Simple9Encoder:
 
         return self.writer.getbytes()
 
+    def read_str(self):
 
+
+        res_str = ""
+
+        i = 0
+        while i < 32:  #and not self.reader.finished(): wrong number of bits indicates an error
+            cur_bit = self.reader.get()
+            if cur_bit == 1:
+                res_str += '1'
+            else:
+                res_str += '0'
+            i += 1
+
+        return res_str
+
+    def decode_batch(self, res_str):
+        res_list = []
+        n = self.get_n(res_str[:4])
+        res_str = res_str[4:]
+
+        num_len = 28/n
+        i = 0
+        while i + num_len <= 28:
+            cur = res_str[i:i + num_len]
+            # print cur
+            i += num_len
+            res_list.append(int(cur, 2))
+        # print res_list
+        return res_list
+
+        
             
     def decode(self, blob):
-        raise ValueError()
+        self.reader = BitstreamReader(blob)
+
+        res_list = []
+
+        while not self.reader.finished():
+            cur_str = self.read_str()
+            # print cur_str
+            res_list += self.decode_batch(cur_str)
+            # print "====="
+
+        return res_list
+
+
+
+
+        
 
 def main():
     encoder = Simple9Encoder()
     # for it in encoder.values:
     #     print encoder.get_signature(it)
-    res =  encoder.encode([1, 2, 3, 16, 19, 11])
-    print map(lambda x: bin(ord(x))[2:].zfill(8), res)
+    res =  encoder.encode([1, 2, 3, 16, 19, 11, 23422, 143, 19, 81])
+    # res =  encoder.encode([0, 0, 11, 12, 123481234, 234234, 2322222, 1111, 11])
+    # print map(lambda x: bin(ord(x))[2:].zfill(8), res)
+    print encoder.decode(res)
 
     # print encoder.can_pack([1, 1, 1, 1, 1], 5)
 
