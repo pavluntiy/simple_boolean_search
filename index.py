@@ -134,7 +134,7 @@ class Indexer:
 
 
         dict_file = open("./data/dict.txt", "w")
-        dict_file.write(self.encoder.name)
+        dict_file.write("{0}\n".format(self.encoder.name))
         for word, idx in self.word_to_idx.iteritems():
                 dict_file.write(u"{0} {1} {2}\n".format(word, idx, lens[self.word_to_idx[word]]).encode("utf-8"))
         dict_file.close()

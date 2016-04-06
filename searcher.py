@@ -38,6 +38,8 @@ class Searcher:
         else:
             self.encoder = Simple9Encoder()
 
+        # print self.encoder.name
+
         line = dict_file.readline()
         self.doc_id_count = {}
         while line != '':
@@ -122,7 +124,7 @@ class Searcher:
         self.load_urls()
         # self.load_index()
         self.index_file = open("./data/index.txt", "r")
-        self.encoder = VarByteEncoder()
+        # self.encoder = VarByteEncoder()
         # print "Ready to search"
         
     def get_doc_id_set(self, word):
