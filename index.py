@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 import re
 
 from varbyteencoder import VarByteEncoder
+from simple9encoder import Simple9Encoder
 
 
 
@@ -153,7 +154,11 @@ class Indexer:
 def main():
     os.system("mkdir tmp")
     os.system("mkdir data")
-    indexer = Indexer(VarByteEncoder)
+    if sys.argv[1] == "varbyte":
+        encoder_class = VarByteEncoder
+    else:
+        encoder_class = Simple9Encoder
+    indexer = Indexer(encoder_class)
     indexer.build_dict(indexer.read_docs(sys.argv[2:]))
     os.system("rm -rf tmp")
 

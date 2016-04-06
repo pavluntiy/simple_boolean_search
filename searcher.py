@@ -6,6 +6,7 @@ import os
 from collections import Counter, defaultdict
 import re
 from varbyteencoder import VarByteEncoder
+from simple9encoder import Simple9Encoder
 
 
 class Query:
@@ -34,7 +35,9 @@ class Searcher:
         line = dict_file.readline()
         if line.strip() == "varbyte":
             self.encoder = VarByteEncoder()
-        
+        else:
+            self.encoder = Simple9Encoder()
+
         line = dict_file.readline()
         self.doc_id_count = {}
         while line != '':
