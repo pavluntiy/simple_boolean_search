@@ -32,6 +32,10 @@ class Searcher:
     def load_dict(self):
         dict_file = open("./data/dict.txt", "r")
         line = dict_file.readline()
+        if line.strip() == "varbyte":
+            self.encoder = VarByteEncoder()
+        
+        line = dict_file.readline()
         self.doc_id_count = {}
         while line != '':
             splitted = line.strip().split(' ')
@@ -49,41 +53,49 @@ class Searcher:
         # print "loaded dict:", len(self.word_index)
         # print max(self.doc_id_count)
 
-    def load_index(self):
+    # def load_index(self):
 
-        varbyte = VarByteEncoder()
+    #     encoder = VarByteEncoder()
 
-        index_file = open("./data/index.txt", "r")
-        word = index_file.tell()
-        byte_cnt = self.doc_id_count[word]
-        # line = index_file.readline()
-        blob  = index_file.read(byte_cnt)
-        # print byte_cnt
-        # print word
+    #     index_file = open("./data/index.txt", "r")
+    #     word = index_file.tell()
+    #     byte_cnt = self.doc_id_count[word]
+    #     # line = index_file.readline()
+    #     blob  = index_file.read(byte_cnt)
+    #     # print byte_cnt
+    #     # print word
 
-        while blob != '':
-            # print map(lambda x: bin(ord(x)), blob)
-            # splitted = line.strip().split(' ')
-            # word = int(splitted[0)
-            # print word
-            # doc_ids = map(int, splitted[1:])
-            doc_ids = varbyte.decode(blob)
+    #     while blob != '':
+    #         # print map(lambda x: bin(ord(x)), blob)
+    #         # splitted = line.strip().split(' ')
+    #         # word = int(splitted[0)
+    #         # print word
+    #         # doc_ids = map(int, splitted[1:])
+    #         doc_ids = encoder.decode(blob)
 
 
-            self.index[word] = doc_ids
-            word = index_file.tell()
-            if word not in self.doc_id_count:
-                break
-            byte_cnt = self.doc_id_count[word]
-            # print word
-            blob  = index_file.read(byte_cnt)
-            # print byte_cnt
-            # line = index_file.readline()
-        index_file.close()
+    #         self.index[word] = doc_ids
+    #         word = index_file.tell()
+    #         if word not in self.doc_id_count:
+    #             break
+    #         byte_cnt = self.doc_id_count[word]
+    #         # print word
+    #         blob  = index_file.read(byte_cnt)
+    #         # print byte_cnt
+    #         # line = index_file.readline()
+    #     index_file.close()
 
         # print "loaded index:", len(self.index)
         # print self.index.keys()
         # print self.index
+
+    def read_index_entry(self, word):
+        if word not in self.index:
+            byte_cnt = self.doc_id_count[word]
+            self.index_file.seek(word)
+            blob  = self.index_file.read(byte_cnt)
+            doc_ids = self.encoder.decode(blob)
+            self.index[word] = doc_ids
 
     def load_urls(self):
         url_file = open("./data/urls.txt", "r")
@@ -105,20 +117,27 @@ class Searcher:
         self.index = {}
         self.load_dict()
         self.load_urls()
-        self.load_index()
+        # self.load_index()
+        self.index_file = open("./data/index.txt", "r")
+        self.encoder = VarByteEncoder()
         # print "Ready to search"
         
     def get_doc_id_set(self, word):
         if word not in self.word_index:
             return set()
-
         windex = self.word_index[word]
+        self.read_index_entry(windex)
+        
+
+        
         # print windex
         # print windex in self.index
+        # print self.index[windex]
         return set(self.index[windex])
 
 
     def search(self, query):
+
         if query.term is not None:
             return self.get_doc_id_set(query.term)
 

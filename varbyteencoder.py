@@ -1,5 +1,6 @@
 import struct
 class VarByteEncoder:
+    name = "varbyte"
         
     def encode(self, xs):
         res = ""
