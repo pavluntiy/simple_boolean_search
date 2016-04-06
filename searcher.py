@@ -47,6 +47,7 @@ class Searcher:
         dict_file.close()
 
         # print "loaded dict:", len(self.word_index)
+        # print max(self.doc_id_count)
 
     def load_index(self):
 
@@ -58,7 +59,7 @@ class Searcher:
         # line = index_file.readline()
         blob  = index_file.read(byte_cnt)
         # print byte_cnt
-        print word
+        # print word
 
         while blob != '':
             # print map(lambda x: bin(ord(x)), blob)
@@ -71,12 +72,15 @@ class Searcher:
 
             self.index[word] = doc_ids
             word = index_file.tell()
+            if word not in self.doc_id_count:
+                break
             byte_cnt = self.doc_id_count[word]
-            print word
+            # print word
             blob  = index_file.read(byte_cnt)
             # print byte_cnt
             # line = index_file.readline()
         index_file.close()
+
         # print "loaded index:", len(self.index)
         # print self.index.keys()
         # print self.index

@@ -69,14 +69,14 @@ def build_index(pairs, word_to_idx):
     # index_file.write(str(index.iteritems()))
     new_word_ids = {}
 
-    lens = {}
+    _lens = {}
     varbyte = VarByteEncoder()
     for word, doc_ids in word_index.iteritems():
         # index_file.write("{0} ".format(word))
 
         new_word_ids[word] = index_file.tell()
         index_file.write(varbyte.encode(sorted(doc_ids)))
-        lens[word] = index_file.tell() - new_word_ids[word]
+        _lens[word] = index_file.tell() - new_word_ids[word]
         # print new_word_ids[word]
         # for doc_id in sorted(doc_ids):
         #     index_file.write("{0} ".format(doc_id))
@@ -84,12 +84,22 @@ def build_index(pairs, word_to_idx):
     index_file.close()
 
     # print lens
+    lens = {}
+    for word in word_to_idx:
+        word_id = word_to_idx[word]
+        new_word_id = new_word_ids[word_id]
+        lens[new_word_id] = _lens[word_id]
+        word_to_idx[word] = new_word_id
+
+
 
     dict_file = open("./data/dict.txt", "w")
     for word, idx in word_to_idx.iteritems():
-            print lens[word_to_idx[word]]
+            # print lens[word_to_idx[word]]
             dict_file.write(u"{0} {1} {2}\n".format(word, idx, lens[word_to_idx[word]]).encode("utf-8"))
     dict_file.close()
+
+    # print max(word_to_idx.values())
 
     return new_word_ids, word_index
 
@@ -100,8 +110,7 @@ def build_dict(docs):
     word_to_idx, idx_to_word, pairs = get_pairs(words_in_docs, total_words)
     new_word_ids, word_index = build_index(pairs, word_to_idx)
 
-    for word in word_to_idx:
-        word_to_idx[word] = new_word_ids[word_to_idx[word]]
+
 
 
 
