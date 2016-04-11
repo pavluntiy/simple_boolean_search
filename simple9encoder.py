@@ -6,21 +6,21 @@ class BitstreamWriter:
     def __init__(self):
         self.nbits  = 0
         self.curbyte = 0    
-        self.vbytes = []
+        self.vbytes = ""
 
     def add(self, x):
         self.curbyte |= x << (8-1 - (self.nbits % 8))
         self.nbits += 1
 
         if self.nbits % 8 == 0:
-            self.vbytes.append(chr(self.curbyte))
+            self.vbytes += struct.pack("B", self.curbyte)
             self.curbyte = 0
 
     def getbytes(self):
-        if self.nbits & 7 == 0:
+        if self.nbits  == 0:
             return "".join(self.vbytes)
 
-        return "".join(self.vbytes) + chr(self.curbyte)
+        return self.vbytes
 
 
 class BitstreamReader:
@@ -44,21 +44,22 @@ class Simple9Encoder:
     name = "simple9"
 
     values = [28, 14, 9, 7, 5, 4, 3, 2, 1]
+    values_set = set(values)
 
-    def can_pack(self, xs, n):
-        if len(xs) != n:
-            return False
+    # def can_pack(self, xs, n):
+    #     if len(xs) != n:
+    #         return False
 
-        max_log = 0
-        for x in xs:
-            cur_log = math.ceil(math.log(x, 2)) if x != 0 else 1
-            max_log = max(max_log, cur_log)
+    #     max_log = 0
+    #     for x in xs:
+    #         cur_log = math.ceil(math.log(x, 2)) if x != 0 else 1
+    #         max_log = max(max_log, cur_log)
 
-        # print max_log
-        if n * max_log <= 28:
-            return True
+    #     # print max_log
+    #     if n * max_log <= 28:
+    #         return True
 
-        return False
+    #     return False
 
     # def get_signature(self, n):
     #     return bin(self.values.index(n))[2:].zfill(4)
@@ -72,16 +73,18 @@ class Simple9Encoder:
     def encode_batch(self, xs):
         # print len(xs)
         # resstr = bin(self.values.index(len(xs)))[2:].zfill(4)
+
+        self.res = 0
+        self.counter = 0
         self.write_str(bin(self.values.index(len(xs)))[2:].zfill(4))
         fill_len = 28/(len(xs))
 
 
-        counter = 4
         for x in xs:
             # resstr += bin(x)[2:].zfill(fill_len)
             tmp = bin(x)[2:].zfill(fill_len)
-            self.write_str(tmp)
-            counter += len(tmp)
+            self.write_str(tmp)             
+            # counter += len(tmp)
             # for b in bin(x)[2:].zfill(fill_len):
             #     if b == "1":
             #         self.writer.add(1)
@@ -90,25 +93,25 @@ class Simple9Encoder:
             #     counter += 1
             # print resstr
 
-        while counter < 32:
-            self.writer.add(0)
-            counter += 1
+        
+        self.write_str("0" * (32 - self.counter))
 
         # print resstr
 
-        # return resstr
+        return struct.pack(">I", self.res)
 
-    def write_str(self, s): 
-        for c in s:
-            if c == '1':
-                self.writer.add(1)
-            else:
-                self.writer.add(0)
+    def write_str(self, s, size=0): 
+        # print size
+        # print bin(self.res)
+        self.res = (self.res << size) | s
+        self.counter += size
                   
 
     def encode(self, xs):
 
-        self.writer = BitstreamWriter()
+        # self.writer = BitstreamWriter()
+        # self.res = res
+        res = ""
     
         while len(xs) > 0:
             # acc = 0
@@ -116,20 +119,51 @@ class Simple9Encoder:
             # n = 1
             # for i in range(1, 28 + 1):
                 # if 
-            for n in self.values:
-                # for 
+            n_best = 1
+            for n in range(1, 29):
+                if n not in self.values_set:
+                    continue
 
-                if self.can_pack(xs[:n], n):
+                if n - 1 >= len(xs):
                     break
 
-            resstr = self.encode_batch(xs[:n])
+                current = xs[n - 1]
+
+                if math.ceil(math.log(current, 2)) if current != 0 else 1 > 28/n:
+                    break
+
+                n_best = n
+
+            cur_xs = xs[:n_best]
+            self.res = 0
+            self.counter = 0
+            self.write_str(self.values.index(len(cur_xs)), 4)
+            fill_len = 28/(len(cur_xs))
+
+            # print fill_len
+            for x in cur_xs:
+                # tmp = bin(x)[2:].zfill(fill_len)
+
+                self.write_str(x, fill_len)     
+
+            # print bin(self.res)
+            # 
+            res += struct.pack(">I", self.res)        
+ 
+            
+            # self.write_str(32 - self.counter))
+
+
+
+            # res += self.encode_batch(xs[:n_best])
+
             # print resstr
             # self.write_str(resstr)
 
-            xs = xs[n:]
+            xs = xs[n_best:]
 
 
-        return self.writer.getbytes()
+        return res
 
     def read_str(self):
 
@@ -186,12 +220,14 @@ def main():
     encoder = Simple9Encoder()
     # for it in encoder.values:
     #     print encoder.get_signature(it)
-    for i in range(1, 100 * 100 * 100):
-        res = encoder.encode([111, 12])
+    # for i in range(1, 100 * 100 * 10):
+    # res = encoder.encode([1024, 3, 23243, 203])
     # res =  encoder.encode([1, 2, 3, 16, 19, 11, 23422, 143, 19, 81])
-        res =  encoder.encode([0, 0, 11, 12, 123481234, 234234, 2322222, 1111, 11, 12, 13, 14, 1523, 234123412, 11, 0, 1, 2, 3])
-    # print map(lambda x: bin(ord(x))[2:].zfill(8), res)
-        encoder.decode(res)
+    res =  encoder.encode([0, 0, 11, 12, 123481234, 234234, 2322222, 1111, 11, 12, 13, 14, 1523, 234123412, 11, 0, 1, 2, 3])
+    print map(lambda x: bin(ord(x))[2:].zfill(8), res)
+    print encoder.decode(res)
+    # encoder.decode(res)
+
 
     # print encoder.can_pack([1, 1, 1, 1, 1], 5)
 
