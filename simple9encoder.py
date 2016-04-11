@@ -5,7 +5,7 @@ import math
 class BitstreamWriter:
     def __init__(self):
         self.nbits  = 0
-        self.curbyte = 0
+        self.curbyte = 0    
         self.vbytes = []
 
     def add(self, x):
@@ -71,19 +71,32 @@ class Simple9Encoder:
 
     def encode_batch(self, xs):
         # print len(xs)
-        resstr = bin(self.values.index(len(xs)))[2:].zfill(4)
+        # resstr = bin(self.values.index(len(xs)))[2:].zfill(4)
+        self.write_str(bin(self.values.index(len(xs)))[2:].zfill(4))
         fill_len = 28/(len(xs))
 
+
+        counter = 4
         for x in xs:
-            resstr += bin(x)[2:].zfill(fill_len)
+            # resstr += bin(x)[2:].zfill(fill_len)
+            tmp = bin(x)[2:].zfill(fill_len)
+            self.write_str(tmp)
+            counter += len(tmp)
+            # for b in bin(x)[2:].zfill(fill_len):
+            #     if b == "1":
+            #         self.writer.add(1)
+            #     else:
+            #         self.writer.add(0)
+            #     counter += 1
             # print resstr
 
-        while len(resstr) < 32:
-            resstr += '0'
+        while counter < 32:
+            self.writer.add(0)
+            counter += 1
 
         # print resstr
 
-        return resstr
+        # return resstr
 
     def write_str(self, s): 
         for c in s:
@@ -98,13 +111,20 @@ class Simple9Encoder:
         self.writer = BitstreamWriter()
     
         while len(xs) > 0:
+            # acc = 0
+            # cur = 0
+            # n = 1
+            # for i in range(1, 28 + 1):
+                # if 
             for n in self.values:
+                # for 
+
                 if self.can_pack(xs[:n], n):
                     break
 
             resstr = self.encode_batch(xs[:n])
             # print resstr
-            self.write_str(resstr)
+            # self.write_str(resstr)
 
             xs = xs[n:]
 
@@ -166,13 +186,16 @@ def main():
     encoder = Simple9Encoder()
     # for it in encoder.values:
     #     print encoder.get_signature(it)
-    res =  encoder.encode([1, 2, 3, 16, 19, 11, 23422, 143, 19, 81])
-    # res =  encoder.encode([0, 0, 11, 12, 123481234, 234234, 2322222, 1111, 11])
+    for i in range(1, 100 * 100 * 100):
+        res = encoder.encode([111, 12])
+    # res =  encoder.encode([1, 2, 3, 16, 19, 11, 23422, 143, 19, 81])
+        res =  encoder.encode([0, 0, 11, 12, 123481234, 234234, 2322222, 1111, 11, 12, 13, 14, 1523, 234123412, 11, 0, 1, 2, 3])
     # print map(lambda x: bin(ord(x))[2:].zfill(8), res)
-    print encoder.decode(res)
+        encoder.decode(res)
 
     # print encoder.can_pack([1, 1, 1, 1, 1], 5)
 
 
 if __name__ == "__main__":
-    main()
+    import cProfile
+    cProfile.run("main()")

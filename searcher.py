@@ -9,8 +9,47 @@ from varbyteencoder import VarByteEncoder
 from simple9encoder import Simple9Encoder
 
 
+class Parser:
+    def get_or(self, text):
+        braces = 0
+
+        for i in range(len(text) - 1, -1, -1):
+            if text[i] == ')':
+                braces += 1
+            if text[i] == '(':
+                braces -= 1
+
+            if braces == 0 and text[i] == '|':
+                res = Query("|")
+                res.left = self.get_or()
+                res.right = self.get_and()
+                return
+
+        return self.get_and()
+
+    # def get_and(self, text):
+    #     braces = 0
+
+    #     for i in range(len(text) - 1, -1, -1):
+    #         if text[i] == ')':
+    #             braces += 1
+    #         if text[i] == '(':
+    #             braces -= 1
+
+    #         if braces == 0 and text[i] == '|':
+    #             res = Query("&")
+    #             res.left = self.get_and()
+    #             res.right = self.get_neg)
+    #             return
+
+    #     return self.get_and()
+
+
+
 class Query:
+    
     def __init__(self, text):
+        # self.text = text
         split_idx = text.rfind('&')
         self.term = None
         self.left = None
@@ -25,6 +64,8 @@ class Query:
             self.right = Query(text_r)
         else:
             self.term = text.decode("utf-8").strip().lower()
+
+
 
 
 
