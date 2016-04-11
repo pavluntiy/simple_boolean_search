@@ -9,23 +9,25 @@ from varbyteencoder import VarByteEncoder
 from simple9encoder import Simple9Encoder
 
 
-class Parser:
-    def get_or(self, text):
-        braces = 0
+from parser import Parser, Query, print_query
 
-        for i in range(len(text) - 1, -1, -1):
-            if text[i] == ')':
-                braces += 1
-            if text[i] == '(':
-                braces -= 1
+# class Parser:
+#     def get_or(self, text):
+#         braces = 0
 
-            if braces == 0 and text[i] == '|':
-                res = Query("|")
-                res.left = self.get_or()
-                res.right = self.get_and()
-                return
+#         for i in range(len(text) - 1, -1, -1):
+#             if text[i] == ')':
+#                 braces += 1
+#             if text[i] == '(':
+#                 braces -= 1
 
-        return self.get_and()
+#             if braces == 0 and text[i] == '|':
+#                 res = Query("|")
+#                 res.left = self.get_or()
+#                 res.right = self.get_and()
+#                 return
+
+#         return self.get_and()
 
     # def get_and(self, text):
     #     braces = 0
@@ -46,24 +48,24 @@ class Parser:
 
 
 
-class Query:
+# class Query:
     
-    def __init__(self, text):
-        # self.text = text
-        split_idx = text.rfind('&')
-        self.term = None
-        self.left = None
-        self.right = None
-        # print split_idx
-        if split_idx != -1:
-            text_l = text[:split_idx]
-            text_r = text[split_idx + 1:]
-            # print text_l
-            # print text_r
-            self.left = Query(text_l)
-            self.right = Query(text_r)
-        else:
-            self.term = text.decode("utf-8").strip().lower()
+#     def __init__(self, text):
+#         # self.text = text
+#         split_idx = text.rfind('&')
+#         self.term = None
+#         self.left = None
+#         self.right = None
+#         # print split_idx
+#         if split_idx != -1:
+#             text_l = text[:split_idx]
+#             text_r = text[split_idx + 1:]
+#             # print text_l
+#             # print text_r
+#             self.left = Query(text_l)
+#             self.right = Query(text_r)
+#         else:
+#             self.term = text.decode("utf-8").strip().lower()
 
 
 
@@ -184,10 +186,26 @@ class Searcher:
 
     def search(self, query):
 
-        if query.term is not None:
+
+            
+        if query.type == "...":
             return self.get_doc_id_set(query.term)
 
-        return self.search(query.left) & self.search(query.right)
+        if query.type == "&":
+
+            if query.left.type == "!":
+                return self.search(query.right) - self.search(query.left.negated)  
+
+            if query.right.type == "!":
+                return self.search(query.left) - self.search(query.right.negated)
+
+            return self.search(query.left) & self.search(query.right)   
+            
+
+        if query.type == "|":
+            return self.search(query.left) | self.search(query.right)
+
+        
 
     def get_document_list(self, query):
         docs = self.search(query)
@@ -200,11 +218,12 @@ class Searcher:
 
 def main():
     searcher = Searcher()
+    parser  = Parser()
 
     query_text = sys.stdin.readline()
     while query_text != '':        
         # print query
-        query = Query(query_text)
+        query = parser.parse(query_text)
         res = searcher.get_document_list(query)
 
         print query_text.strip()
